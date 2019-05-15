@@ -52,6 +52,27 @@
                 "[resourceId('Microsoft.Web/sites', variables('functionAppName'))]"
             ]
         },
+        // function app MSI keyvault access
+        {
+            "apiVersion": "2018-02-14",
+            "type": "Microsoft.KeyVault/vaults/accessPolicies",
+            "name": "[concat(variables('keyVaultName'), '/add')]",
+            "properties": {
+              "accessPolicies": [
+                {
+                  "tenantId": "[variables('tenantId')]",
+                  "objectId": "[reference(resourceId('Microsoft.Web/sites', variables('functionAppName')), '2018-02-01', 'Full').identity.principalId]",
+                  "permissions": {
+                    "secrets": [ "get" ]
+                  }
+                }
+              ]
+            },
+            "dependsOn": [
+              "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]",
+              "[resourceId('Microsoft.Web/sites', variables('functionAppName'))]"
+            ]
+        },
         // Storage account
         {
             "type": "Microsoft.Storage/storageAccounts",
