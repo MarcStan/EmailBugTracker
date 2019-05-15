@@ -1,0 +1,54 @@
+# build definition for function app
+
+resources:
+- repo: self
+  clean: true
+trigger:
+  batch: true
+  branches:
+    include:
+    - master
+  paths:
+    include:
+    - '*'
+    exclude:
+    - deploy/*
+pool:
+  name: Hosted
+variables:
+  BuildConfiguration: 'release'
+steps:
+- checkout: self
+  submodules: true
+
+- task: UseDotNet@2
+  inputs:
+    packageType: 'sdk'
+    version: '2.2.x'
+
+- task: DotNetCoreCLI@2
+  displayName: Build
+  inputs:
+    projects: '**/*.csproj'
+    arguments: '--configuration $(BuildConfiguration) --no-cache'
+
+- task: DotNetCoreCLI@2
+  displayName: Publish
+  inputs:
+    command: publish
+    publishWebProjects: false
+    arguments: '--configuration $(BuildConfiguration) --output $(build.artifactstagingdirectory)'
+    zipAfterPublish: false
+
+- task: PublishBuildArtifacts@1
+  displayName: 'Publish build Artifact'
+  inputs:
+    PathtoPublish: '$(build.artifactstagingdirectory)'
+    ArtifactName: function
+
+- task: PublishBuildArtifacts@1
+  displayName: 'Publish Artifact: Infrastructure Scripts'
+  inputs:
+    PathtoPublish: deploy
+
+    ArtifactName: deploy
