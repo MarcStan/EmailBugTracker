@@ -3,6 +3,8 @@
     "Values": {
       "AzureWebJobsStorage": "",
       "FUNCTIONS_WORKER_RUNTIME": "dotnet",
-      "KeyvaultName": "email-bugtracker"
+      "KeyvaultName": "email-bugtracker",
+      // use Visual Studio integration locally
+      "AppInsights--InstrumentationKey":  ""
     }
 }

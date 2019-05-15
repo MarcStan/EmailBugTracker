@@ -1,8 +1,8 @@
-﻿namespace EmailBugTracker
+﻿namespace EmailBugTracker.Logic
 {
     public class KeyvaultConfig
     {
-        public string AllowedRecipient { get; set; }
+        public string AllowedRecipients { get; set; }
 
         public string WorkItemPAT { get; set; }
 

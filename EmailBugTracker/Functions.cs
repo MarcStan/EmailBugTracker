@@ -1,3 +1,5 @@
+using EmailBugTracker.Logic;
+using Microsoft.ApplicationInsights;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.KeyVault;
@@ -7,8 +9,7 @@ using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Configuration.AzureKeyVault;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
-using System.IO;
+using System;
 using System.Threading.Tasks;
 
 namespace EmailBugTracker
@@ -21,34 +22,32 @@ namespace EmailBugTracker
             ExecutionContext context,
             ILogger log)
         {
-            var config = LoadConfig(context.FunctionAppDirectory);
-            SendgridParameters param;
-            using (var reader = new StreamReader(req.Body))
+            var telemetry = new TelemetryClient();
+            try
             {
-                param = JsonConvert.DeserializeObject<SendgridParameters>(await reader.ReadToEndAsync());
+                var config = LoadConfig(context.FunctionAppDirectory);
+                var key = config["AppInsights:InstrumentationKey"];
+                if (!string.IsNullOrEmpty(key))
+                    telemetry.InstrumentationKey = key;
+                else
+                    log.LogWarning("Application insights key not set!");
+
+                var logic = new EmailReceiverLogic(new Telemetry(telemetry));
+
+                var cfg = new KeyvaultConfig();
+                config.Bind(cfg);
+                await logic.RunAsync(cfg, req.Body);
             }
-            var cfg = new KeyvaultConfig();
-            config.Bind(cfg);
-            if (!string.IsNullOrEmpty(param.To) &&
-                cfg.AllowedRecipient.Contains(param.To))
+            catch (Exception e)
             {
-                var workitem = Parse(param);
-                log.LogInformation($"Work item {workitem.Title} would have been created");
+                telemetry.TrackException(e);
+                return new BadRequestResult();
             }
             return new OkResult();
         }
 
-        private static Workitem Parse(SendgridParameters param)
-        {
-            return new Workitem
-            {
-                Title = param.Subject,
-                Content = param.Html
-            };
-        }
-
         /// <summary>
-        /// Helper that loads the config values from file and, environment variables.
+        /// Helper that loads the config values from file, environment variables and keyvault.
         /// </summary>
         private static IConfiguration LoadConfig(string workingDirectory)
         {
@@ -65,13 +64,6 @@ namespace EmailBugTracker
 
             var cfg = builder.Build();
             return cfg;
-        }
-
-        public class Workitem
-        {
-            public string Title { get; set; }
-
-            public string Content { get; set; }
         }
     }
 }

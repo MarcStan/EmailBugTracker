@@ -1,4 +1,4 @@
-﻿namespace EmailBugTracker
+﻿namespace EmailBugTracker.Logic
 {
     public class SendgridParameters
     {

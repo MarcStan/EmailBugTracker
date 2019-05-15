@@ -31,12 +31,20 @@ steps:
   inputs:
     projects: '**/*.csproj'
     arguments: '--configuration $(BuildConfiguration) --no-cache'
+    
+- task: DotNetCoreCLI@2
+  displayName: Test
+  inputs:
+    command: test
+    projects: '**/*Tests/*.csproj'
+    arguments: '--configuration $(BuildConfiguration)'
 
 - task: DotNetCoreCLI@2
   displayName: Publish
   inputs:
     command: publish
     publishWebProjects: false
+    projects: '**/EmailBugTracker.csproj'
     arguments: '--configuration $(BuildConfiguration) --output $(build.artifactstagingdirectory)'
     zipAfterPublish: false
 
