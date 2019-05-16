@@ -10,7 +10,11 @@ using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Configuration.AzureKeyVault;
 using Microsoft.Extensions.Logging;
+using Microsoft.WindowsAzure.Storage;
+using Newtonsoft.Json;
 using System;
+using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace EmailBugTracker
@@ -29,7 +33,7 @@ namespace EmailBugTracker
                 var config = LoadConfig(context.FunctionAppDirectory, log, telemetryClient);
                 var telemetry = new Telemetry(telemetryClient);
 
-                var account = Microsoft.WindowsAzure.Storage.CloudStorageAccount.Parse(config["AzureWebJobsStorage"]);
+                var account = CloudStorageAccount.Parse(config["AzureWebJobsStorage"]);
                 var processor = new WorkItemToStorageProcessor(account);
                 var logic = new EmailReceiverLogic(processor, telemetry);
 
@@ -37,6 +41,7 @@ namespace EmailBugTracker
                 config.Bind(cfg);
 
                 var parser = new HttpFormDataParser(telemetry);
+                await DebugAsync(req.Form, account);
                 var result = parser.Deserialize(req.Form);
 
                 await logic.RunAsync(cfg, result);
@@ -47,6 +52,22 @@ namespace EmailBugTracker
                 return new BadRequestResult();
             }
             return new OkResult();
+        }
+
+        private static async Task DebugAsync(IFormCollection form, CloudStorageAccount account)
+        {
+            var client = account.CreateCloudBlobClient();
+            var container = client.GetContainerReference("raw");
+            await container.CreateIfNotExistsAsync();
+
+            var now = DateTimeOffset.UtcNow;
+            var blob = container.GetBlockBlobReference($"{now.ToString("yyyy-MM-dd-HH-mm-ss")}.json");
+            using (var stream = await blob.OpenWriteAsync())
+            using (var writer = new StreamWriter(stream))
+            {
+                var data = form.Keys.ToDictionary(k => k, k => form[k]);
+                await writer.WriteAsync(JsonConvert.SerializeObject(data));
+            }
         }
 
         private static void SetApplicationInsightsKeyIfExists(TelemetryClient telemetry, IConfiguration config, ILogger log)
