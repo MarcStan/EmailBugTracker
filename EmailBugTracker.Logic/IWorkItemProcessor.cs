@@ -4,6 +4,6 @@ namespace EmailBugTracker.Logic
 {
     public interface IWorkItemProcessor
     {
-        Task ProcessWorkItemAsync(WorkItem workitem);
+        Task ProcessWorkItemAsync(WorkItem workItem);
     }
 }

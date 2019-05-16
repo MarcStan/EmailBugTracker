@@ -45,7 +45,7 @@ namespace EmailBugTracker.Logic
                 if (email.Contains("@"))
                     return email; // good enough
 
-                throw new NotSupportedException($"Invalid input received for display name. Expected 'some name' <email> but found: {email}");
+                throw new NotSupportedException($"Invalid input received for display name. Expected 'some name <email>' but found: {email}");
             }
 
             email = email.Substring(email.LastIndexOf('<') + 1);

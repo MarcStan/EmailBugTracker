@@ -1,4 +1,5 @@
 using EmailBugTracker.Logic;
+using EmailBugTracker.Logic.Processors;
 using Microsoft.ApplicationInsights;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;

@@ -4,7 +4,7 @@ using System;
 using System.IO;
 using System.Threading.Tasks;
 
-namespace EmailBugTracker.Logic
+namespace EmailBugTracker.Logic.Processors
 {
     public class WorkItemToStorageProcessor : IWorkItemProcessor
     {
