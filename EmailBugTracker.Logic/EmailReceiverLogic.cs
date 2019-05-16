@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using System;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace EmailBugTracker.Logic
@@ -20,17 +21,49 @@ namespace EmailBugTracker.Logic
             using (var reader = new StreamReader(body))
             {
                 param = JsonConvert.DeserializeObject<SendgridParameters>(await reader.ReadToEndAsync());
+                Validate(param);
             }
-            if (!string.IsNullOrEmpty(param.To) &&
-                cfg.AllowedRecipients.Contains(param.To))
+            if (!IsWhitelisted(param.From, cfg.WhitelistedSenders))
             {
-                var workitem = Parse(param);
-                _telemetry.TrackEvent("Workitem created", dict =>
-                {
-                    dict["title"] = workitem.Title;
-                    dict["sender"] = param.From;
-                });
+                _telemetry.TrackEvent("Non-whitelisted sender", dict => dict["sender"] = EmailAnonymization.PseudoAnonymize(param.From));
+                return;
             }
+            if (!IsWhitelisted(param.To, cfg.AllowedRecipients))
+            {
+                _telemetry.TrackEvent("Non-whitelisted recipient", dict => dict["recipient"] = EmailAnonymization.PseudoAnonymize(param.To));
+                return;
+            }
+
+            var workitem = Parse(param);
+            _telemetry.TrackEvent("Work item created", dict =>
+            {
+                dict["title"] = workitem.Title;
+                dict["sender"] = EmailAnonymization.PseudoAnonymize(param.From);
+            });
+        }
+
+        private bool IsWhitelisted(string from, string whitelistedSenders)
+        {
+            if (string.IsNullOrEmpty(whitelistedSenders))
+                return true;
+
+            var allowedEmails = whitelistedSenders.Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries);
+            if (allowedEmails.Any(e => e.Equals(from, StringComparison.OrdinalIgnoreCase)))
+                return true;
+
+            return false;
+        }
+
+        private void Validate(SendgridParameters param)
+        {
+            if (string.IsNullOrEmpty(param.From))
+                throw new ArgumentNullException(nameof(param.From));
+
+            if (string.IsNullOrEmpty(param.To))
+                throw new ArgumentNullException(nameof(param.To));
+
+            if (string.IsNullOrEmpty(param.Subject))
+                throw new ArgumentNullException(nameof(param.Subject));
         }
 
         private static Workitem Parse(SendgridParameters param)

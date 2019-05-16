@@ -26,16 +26,13 @@ namespace EmailBugTracker
             try
             {
                 var config = LoadConfig(context.FunctionAppDirectory);
-                var key = config["AppInsights:InstrumentationKey"];
-                if (!string.IsNullOrEmpty(key))
-                    telemetry.InstrumentationKey = key;
-                else
-                    log.LogWarning("Application insights key not set!");
+                SetApplicationInsightsKeyIfExists(telemetry, config, log);
 
                 var logic = new EmailReceiverLogic(new Telemetry(telemetry));
 
                 var cfg = new KeyvaultConfig();
                 config.Bind(cfg);
+
                 await logic.RunAsync(cfg, req.Body);
             }
             catch (Exception e)
@@ -44,6 +41,15 @@ namespace EmailBugTracker
                 return new BadRequestResult();
             }
             return new OkResult();
+        }
+
+        private static void SetApplicationInsightsKeyIfExists(TelemetryClient telemetry, IConfiguration config, ILogger log)
+        {
+            var key = config["AppInsights:InstrumentationKey"];
+            if (!string.IsNullOrEmpty(key))
+                telemetry.InstrumentationKey = key;
+            else
+                log.LogWarning("Application insights key not set!");
         }
 
         /// <summary>
