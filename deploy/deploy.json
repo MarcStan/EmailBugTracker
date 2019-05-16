@@ -63,7 +63,7 @@
                   "tenantId": "[variables('tenantId')]",
                   "objectId": "[reference(resourceId('Microsoft.Web/sites', variables('functionAppName')), '2018-02-01', 'Full').identity.principalId]",
                   "permissions": {
-                    "secrets": [ "get" ]
+                    "secrets": [ "get", "list" ]
                   }
                 }
               ]

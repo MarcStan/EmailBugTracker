@@ -25,8 +25,8 @@ namespace EmailBugTracker
             var telemetry = new TelemetryClient();
             try
             {
-                var config = LoadConfig(context.FunctionAppDirectory);
-                SetApplicationInsightsKeyIfExists(telemetry, config, log);
+                req.Body.Position = 0;
+                var config = LoadConfig(context.FunctionAppDirectory, log, telemetry);
 
                 var account = Microsoft.WindowsAzure.Storage.CloudStorageAccount.Parse(config["AzureWebJobsStorage"]);
                 var processor = new WorkItemToStorageProcessor(account);
@@ -57,21 +57,35 @@ namespace EmailBugTracker
         /// <summary>
         /// Helper that loads the config values from file, environment variables and keyvault.
         /// </summary>
-        private static IConfiguration LoadConfig(string workingDirectory)
+        private static IConfiguration LoadConfig(string workingDirectory, ILogger log, TelemetryClient telemetry)
         {
-            var builder = new ConfigurationBuilder()
+            try
+            {
+                var builder = new ConfigurationBuilder()
                 .SetBasePath(workingDirectory)
                 .AddJsonFile("local.settings.json", optional: true, reloadOnChange: true)
                 .AddEnvironmentVariables();
-            var tmpConfig = builder.Build();
+                var tmpConfig = builder.Build();
 
-            var keyvault = tmpConfig["KeyVaultName"];
-            var tokenProvider = new AzureServiceTokenProvider();
-            var kvClient = new KeyVaultClient(new KeyVaultClient.AuthenticationCallback(tokenProvider.KeyVaultTokenCallback));
-            builder.AddAzureKeyVault($"https://{keyvault}.vault.azure.net", kvClient, new DefaultKeyVaultSecretManager());
+                // build config from files only first
+                // A) to get the keycault address..
+                var keyvault = tmpConfig["KeyVaultName"];
+                // B) to hook up AI for early error reporting
+                SetApplicationInsightsKeyIfExists(telemetry, tmpConfig, log);
 
-            var cfg = builder.Build();
-            return cfg;
+                var tokenProvider = new AzureServiceTokenProvider();
+                var kvClient = new KeyVaultClient(new KeyVaultClient.AuthenticationCallback(tokenProvider.KeyVaultTokenCallback));
+                builder.AddAzureKeyVault($"https://{keyvault}.vault.azure.net", kvClient, new DefaultKeyVaultSecretManager());
+
+                var cfg = builder.Build();
+                return cfg;
+            }
+            catch (Exception e)
+            {
+                telemetry.TrackException(e);
+                log.LogCritical($"Failed accessing the keyvault: '{e.Message}'. Possible reason: You are debugging locally (in which case you must add your user account to the keyvault access policies manually). Note that the infrastructure deployment will reset the keyvault policies to only allow the azure function MSI! More details on local fallback here: https://docs.microsoft.com/en-us/azure/key-vault/service-to-service-authentication#local-development-authentication");
+                throw;
+            }
         }
     }
 }
