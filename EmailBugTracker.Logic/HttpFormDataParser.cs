@@ -19,19 +19,17 @@ namespace EmailBugTracker.Logic
             param.From = ParseEmail(form["from"]);
             param.To = ParseEmail(form["to"]);
             param.Subject = form["subject"];
-            param.Content = form["text"];
-            if (string.IsNullOrWhiteSpace(param.Content))
+            try
             {
-                try
-                {
-                    param.Content = ParseHtml(form["html"]);
-                }
-                catch (Exception e)
-                {
-                    // fallback to raw html if parser fails
-                    _telemetry.TrackException(e);
+                param.Content = ParseHtml(form["html"]);
+            }
+            catch (Exception e)
+            {
+                // fallback to raw html if parser fails
+                _telemetry.TrackException(e);
+                param.Content = form["text"];
+                if (string.IsNullOrWhiteSpace(param.Content))
                     param.Content = form["html"];
-                }
             }
 
             return param;
