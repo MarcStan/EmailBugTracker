@@ -1,10 +1,18 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 
 namespace EmailBugTracker.Logic.Processors
 {
-    public class RawDataToStorageProcessor : IWorkItemProcessor
+    public class AzureDevOpsWorkItemProcessor : IWorkItemProcessor
     {
-        public async Task ProcessWorkItemAsync(WorkItem workitem)
+        private readonly WorkItemConfig _config;
+
+        public AzureDevOpsWorkItemProcessor(WorkItemConfig config)
+        {
+            _config = config ?? throw new ArgumentNullException(nameof(config));
+        }
+
+        public async Task ProcessWorkItemAsync(WorkItem workItem)
         {
         }
     }

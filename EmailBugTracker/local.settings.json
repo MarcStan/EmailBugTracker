@@ -1,10 +1,23 @@
 {
-    "IsEncrypted": false,
-    "Values": {
-      "AzureWebJobsStorage": "UseDevelopmentStorage=true",
-      "FUNCTIONS_WORKER_RUNTIME": "dotnet",
-      "KeyvaultName": "email-bugtracker",
-      // use Visual Studio integration locally
-      "AppInsights--InstrumentationKey":  ""
-    }
+  "IsEncrypted": false,
+  "Values": {
+    // these values are used for local development only
+    // for production values either override them in the the ARM template or release (for non secrets) or in the keyvault (for secrets)
+    "AzureWebJobsStorage": "UseDevelopmentStorage=true",
+    "FUNCTIONS_WORKER_RUNTIME": "dotnet",
+    "KeyvaultName": "email-bugtracker",
+    // use Visual Studio integration locally
+    "AppInsights--InstrumentationKey": "",
+    // the Azure DevOps organization target
+    // if empty, will determine it automatically during the release process (assumes you are using Azure Pipelines)
+    "Organization": "marcstan-public",
+    // Optional target project where all bugs are tracked
+    // if empty will use the fallback option to determine the correct project
+    "Project": "",
+    // to determine the target project where the work item will be created you have multiple options:
+    // 1. Recipient - given a recipient "bugs@example.com" this will look for a project with the name "bugs"
+    // 2. Subject - this will look for a prefix in the subject in the formats "[project]", "project - ", "project |" and fall back to the first word of the subject if none are matched
+    // 3. All - all of the above
+    "DetermineTargetProjectVia": "All"
+  }
 }
