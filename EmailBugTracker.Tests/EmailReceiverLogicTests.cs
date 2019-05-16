@@ -1,10 +1,8 @@
 ﻿using EmailBugTracker.Logic;
 using Moq;
-using Newtonsoft.Json;
 using NUnit.Framework;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Threading.Tasks;
 
 namespace EmailBugTracker.Tests
@@ -29,8 +27,7 @@ namespace EmailBugTracker.Tests
                 To = "bugs@example.com",
                 Subject = "Test"
             };
-            using (var body = CreateHttpBody(param))
-                await logic.RunAsync(config, body);
+            await logic.RunAsync(config, param);
 
             telemetry.Verify(x => x.TrackEvent("Non-whitelisted sender", It.IsAny<Action<Dictionary<string, string>>>()));
         }
@@ -53,8 +50,7 @@ namespace EmailBugTracker.Tests
                 To = "bugs@example.com",
                 Subject = "Test"
             };
-            using (var body = CreateHttpBody(param))
-                await logic.RunAsync(config, body);
+            await logic.RunAsync(config, param);
 
             telemetry.Verify(x => x.TrackEvent("Work item created", It.IsAny<Action<Dictionary<string, string>>>()));
         }
@@ -77,8 +73,7 @@ namespace EmailBugTracker.Tests
                 To = "notbugs@example.com",
                 Subject = "Test"
             };
-            using (var body = CreateHttpBody(param))
-                await logic.RunAsync(config, body);
+            await logic.RunAsync(config, param);
 
             telemetry.Verify(x => x.TrackEvent("Non-whitelisted recipient", It.IsAny<Action<Dictionary<string, string>>>()));
         }
@@ -101,20 +96,9 @@ namespace EmailBugTracker.Tests
                 To = "someone@example.com",
                 Subject = "Test"
             };
-            using (var body = CreateHttpBody(param))
-                await logic.RunAsync(config, body);
+            await logic.RunAsync(config, param);
 
             telemetry.Verify(x => x.TrackEvent("Work item created", It.IsAny<Action<Dictionary<string, string>>>()));
-        }
-
-        private Stream CreateHttpBody(SendgridParameters param)
-        {
-            var stream = new MemoryStream();
-            var writer = new StreamWriter(stream);
-            writer.Write(JsonConvert.SerializeObject(param));
-            writer.Flush();
-            stream.Seek(0, SeekOrigin.Begin);
-            return stream;
         }
     }
 }

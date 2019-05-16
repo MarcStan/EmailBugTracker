@@ -22,24 +22,27 @@ namespace EmailBugTracker
             ExecutionContext context,
             ILogger log)
         {
-            var telemetry = new TelemetryClient();
+            var telemetryClient = new TelemetryClient();
             try
             {
-                req.Body.Position = 0;
-                var config = LoadConfig(context.FunctionAppDirectory, log, telemetry);
+                var config = LoadConfig(context.FunctionAppDirectory, log, telemetryClient);
+                var telemetry = new Telemetry(telemetryClient);
 
                 var account = Microsoft.WindowsAzure.Storage.CloudStorageAccount.Parse(config["AzureWebJobsStorage"]);
                 var processor = new WorkItemToStorageProcessor(account);
-                var logic = new EmailReceiverLogic(processor, new Telemetry(telemetry));
+                var logic = new EmailReceiverLogic(processor, telemetry);
 
                 var cfg = new KeyvaultConfig();
                 config.Bind(cfg);
 
-                await logic.RunAsync(cfg, req.Body);
+                var parser = new HttpFormDataParser(telemetry);
+                var result = parser.Deserialize(req.Form);
+
+                await logic.RunAsync(cfg, result);
             }
             catch (Exception e)
             {
-                telemetry.TrackException(e);
+                telemetryClient.TrackException(e);
                 return new BadRequestResult();
             }
             return new OkResult();

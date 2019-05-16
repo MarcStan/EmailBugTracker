@@ -8,6 +8,6 @@
 
         public string Subject { get; set; }
 
-        public string Html { get; set; }
+        public string Content { get; set; }
     }
 }

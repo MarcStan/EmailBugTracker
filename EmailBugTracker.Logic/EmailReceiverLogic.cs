@@ -1,6 +1,4 @@
-﻿using Newtonsoft.Json;
-using System;
-using System.IO;
+﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -19,14 +17,9 @@ namespace EmailBugTracker.Logic
             _telemetry = telemetry ?? throw new ArgumentNullException(nameof(telemetry));
         }
 
-        public async Task RunAsync(KeyvaultConfig cfg, Stream body)
+        public async Task RunAsync(KeyvaultConfig cfg, SendgridParameters param)
         {
-            SendgridParameters param;
-            using (var reader = new StreamReader(body))
-            {
-                param = JsonConvert.DeserializeObject<SendgridParameters>(await reader.ReadToEndAsync());
-                Validate(param);
-            }
+            Validate(param);
             if (!IsWhitelisted(param.From, cfg.WhitelistedSenders))
             {
                 _telemetry.TrackEvent("Non-whitelisted sender", dict => dict["sender"] = EmailAnonymization.PseudoAnonymize(param.From));
@@ -76,7 +69,7 @@ namespace EmailBugTracker.Logic
             return new WorkItem
             {
                 Title = param.Subject,
-                Content = param.Html ?? "No content"
+                Content = param.Content ?? "No content"
             };
         }
     }
