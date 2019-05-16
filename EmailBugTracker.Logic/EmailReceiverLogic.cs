@@ -9,9 +9,13 @@ namespace EmailBugTracker.Logic
     public class EmailReceiverLogic
     {
         private readonly ITelemetry _telemetry;
+        private readonly IWorkItemProcessor _workitemProcessor;
 
-        public EmailReceiverLogic(ITelemetry telemetry)
+        public EmailReceiverLogic(
+            IWorkItemProcessor workitemProcessor,
+            ITelemetry telemetry)
         {
+            _workitemProcessor = workitemProcessor ?? throw new ArgumentNullException(nameof(workitemProcessor));
             _telemetry = telemetry ?? throw new ArgumentNullException(nameof(telemetry));
         }
 
@@ -34,10 +38,11 @@ namespace EmailBugTracker.Logic
                 return;
             }
 
-            var workitem = Parse(param);
+            var workItem = Parse(param);
+            await _workitemProcessor.ProcessWorkItemAsync(workItem);
             _telemetry.TrackEvent("Work item created", dict =>
             {
-                dict["title"] = workitem.Title;
+                dict["title"] = workItem.Title;
                 dict["sender"] = EmailAnonymization.PseudoAnonymize(param.From);
             });
         }
@@ -66,20 +71,13 @@ namespace EmailBugTracker.Logic
                 throw new ArgumentNullException(nameof(param.Subject));
         }
 
-        private static Workitem Parse(SendgridParameters param)
+        private static WorkItem Parse(SendgridParameters param)
         {
-            return new Workitem
+            return new WorkItem
             {
                 Title = param.Subject,
-                Content = param.Html
+                Content = param.Html ?? "No content"
             };
-        }
-
-        public class Workitem
-        {
-            public string Title { get; set; }
-
-            public string Content { get; set; }
         }
     }
 }

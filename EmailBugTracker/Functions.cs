@@ -28,7 +28,9 @@ namespace EmailBugTracker
                 var config = LoadConfig(context.FunctionAppDirectory);
                 SetApplicationInsightsKeyIfExists(telemetry, config, log);
 
-                var logic = new EmailReceiverLogic(new Telemetry(telemetry));
+                var account = Microsoft.WindowsAzure.Storage.CloudStorageAccount.Parse(config["AzureWebJobsStorage"]);
+                var processor = new WorkItemToStorageProcessor(account);
+                var logic = new EmailReceiverLogic(processor, new Telemetry(telemetry));
 
                 var cfg = new KeyvaultConfig();
                 config.Bind(cfg);

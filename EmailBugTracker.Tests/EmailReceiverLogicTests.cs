@@ -15,7 +15,8 @@ namespace EmailBugTracker.Tests
         public async Task WhenSenderWhitelistIsUsedThenOtherSendersShouldBeDiscarded()
         {
             var telemetry = new Mock<ITelemetry>();
-            var logic = new EmailReceiverLogic(telemetry.Object);
+            var processor = new Mock<IWorkItemProcessor>();
+            var logic = new EmailReceiverLogic(processor.Object, telemetry.Object);
 
             var config = new KeyvaultConfig
             {
@@ -38,7 +39,8 @@ namespace EmailBugTracker.Tests
         public async Task WhenSenderWhitelistIsNotUsedThenAnySendersShouldBeAllowed()
         {
             var telemetry = new Mock<ITelemetry>();
-            var logic = new EmailReceiverLogic(telemetry.Object);
+            var processor = new Mock<IWorkItemProcessor>();
+            var logic = new EmailReceiverLogic(processor.Object, telemetry.Object);
 
             var config = new KeyvaultConfig
             {
@@ -61,7 +63,8 @@ namespace EmailBugTracker.Tests
         public async Task WhenRecipientWhitelistIsUsedThenOtherRecipientsShouldBeDiscarded()
         {
             var telemetry = new Mock<ITelemetry>();
-            var logic = new EmailReceiverLogic(telemetry.Object);
+            var processor = new Mock<IWorkItemProcessor>();
+            var logic = new EmailReceiverLogic(processor.Object, telemetry.Object);
 
             var config = new KeyvaultConfig
             {
@@ -84,7 +87,8 @@ namespace EmailBugTracker.Tests
         public async Task WhenRecipientWhitelistIsNotUsedThenAnyRecipientShouldBeAllowed()
         {
             var telemetry = new Mock<ITelemetry>();
-            var logic = new EmailReceiverLogic(telemetry.Object);
+            var processor = new Mock<IWorkItemProcessor>();
+            var logic = new EmailReceiverLogic(processor.Object, telemetry.Object);
 
             var config = new KeyvaultConfig
             {
