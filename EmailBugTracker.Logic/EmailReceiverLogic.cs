@@ -38,6 +38,7 @@ namespace EmailBugTracker.Logic
             {
                 dict["title"] = workItem.Title;
                 dict["sender"] = EmailAnonymization.PseudoAnonymize(param.From);
+                dict["project"] = workItem.Metadata["project"];
             });
         }
 

@@ -10,18 +10,17 @@ namespace EmailBugTracker.Logic.Processors
     {
         private readonly IHttpClient _httpClient;
         private readonly WorkItemConfig _config;
-        private readonly KeyvaultConfig _keyvault;
 
-        public AzureDevOpsWorkItemProcessor(IHttpClient httpClient, KeyvaultConfig keyvault, WorkItemConfig config)
+        public AzureDevOpsWorkItemProcessor(IHttpClient httpClient, WorkItemConfig config)
         {
             _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
-            _keyvault = keyvault ?? throw new ArgumentNullException(nameof(keyvault));
             _config = config ?? throw new ArgumentNullException(nameof(config));
         }
 
         public async Task ProcessWorkItemAsync(WorkItem workItem)
         {
             var project = GetProject(workItem);
+            workItem.Metadata["project"] = project;
 
             // https://docs.microsoft.com/en-us/rest/api/azure/devops/wit/work%20items/create?view=azure-devops-rest-5.0
             var content = JsonConvert.SerializeObject(new[]
@@ -53,7 +52,6 @@ namespace EmailBugTracker.Logic.Processors
         /// 4. first word of title (will be kept in title)
         /// </summary>
         /// <param name="workItem"></param>
-        /// <returns></returns>
         private string GetProject(WorkItem workItem)
         {
             string project = _config.Project ?? "";

@@ -35,7 +35,7 @@ namespace EmailBugTracker
                 var keyvaultConfig = new KeyvaultConfig();
                 config.Bind(keyvaultConfig);
 
-                var processor = new AzureDevOpsWorkItemProcessor(new HttpClient(new System.Net.Http.HttpClient(), keyvaultConfig), keyvaultConfig, workItemConfig);
+                var processor = new AzureDevOpsWorkItemProcessor(new HttpClient(new System.Net.Http.HttpClient(), keyvaultConfig), workItemConfig);
                 var logic = new EmailReceiverLogic(processor, telemetry);
 
                 var parser = new HttpFormDataParser(telemetry);
@@ -53,7 +53,7 @@ namespace EmailBugTracker
 
         private static void SetApplicationInsightsKeyIfExists(TelemetryClient telemetry, IConfiguration config, ILogger log)
         {
-            var key = config["AppInsights:InstrumentationKey"];
+            var key = config["APPINSIGHTS_INSTRUMENTATIONKEY"];
             if (!string.IsNullOrEmpty(key))
                 telemetry.InstrumentationKey = key;
             else

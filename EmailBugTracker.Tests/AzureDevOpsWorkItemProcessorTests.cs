@@ -14,7 +14,6 @@ namespace EmailBugTracker.Tests
         [Test]
         public async Task ResolvingProjectFromConfigShouldWork()
         {
-            const string pat = "fake";
             const string org = "org";
             const string proj = "proj";
 
@@ -27,17 +26,13 @@ namespace EmailBugTracker.Tests
                     Content = new StringContent("ok"),
                 }));
 
-            var keyvault = new KeyvaultConfig
-            {
-                WorkItemPAT = pat
-            };
             var config = new WorkItemConfig
             {
                 Organization = org,
                 Project = proj,
                 DetermineTargetProjectVia = DetermineTargetProjectVia.All
             };
-            var processor = new AzureDevOpsWorkItemProcessor(http.Object, keyvault, config);
+            var processor = new AzureDevOpsWorkItemProcessor(http.Object, config);
 
             await processor.ProcessWorkItemAsync(new WorkItem
             {
@@ -49,7 +44,6 @@ namespace EmailBugTracker.Tests
         [Test]
         public async Task ResolvingProjectFromEmailShouldWork()
         {
-            const string pat = "fake";
             const string org = "org";
             const string proj = "proj";
 
@@ -62,17 +56,13 @@ namespace EmailBugTracker.Tests
                     Content = new StringContent("ok"),
                 }));
 
-            var keyvault = new KeyvaultConfig
-            {
-                WorkItemPAT = pat
-            };
             var config = new WorkItemConfig
             {
                 Organization = org,
                 Project = null,
                 DetermineTargetProjectVia = DetermineTargetProjectVia.All
             };
-            var processor = new AzureDevOpsWorkItemProcessor(http.Object, keyvault, config);
+            var processor = new AzureDevOpsWorkItemProcessor(http.Object, config);
 
             await processor.ProcessWorkItemAsync(new WorkItem
             {
@@ -88,7 +78,6 @@ namespace EmailBugTracker.Tests
         [Test]
         public async Task ResolvingProjectFromRecipientShouldTakePrecedenceOverSubject()
         {
-            const string pat = "fake";
             const string org = "org";
 
             var expected = $"https://dev.azure.com/{org}/project/_apis/wit/workitems/$Bug?api-version=5.0";
@@ -101,17 +90,13 @@ namespace EmailBugTracker.Tests
                     Content = new StringContent("ok"),
                 }));
 
-            var keyvault = new KeyvaultConfig
-            {
-                WorkItemPAT = pat
-            };
             var config = new WorkItemConfig
             {
                 Organization = org,
                 Project = null,
                 DetermineTargetProjectVia = DetermineTargetProjectVia.All
             };
-            var processor = new AzureDevOpsWorkItemProcessor(http.Object, keyvault, config);
+            var processor = new AzureDevOpsWorkItemProcessor(http.Object, config);
 
             var item = new WorkItem
             {
@@ -133,7 +118,6 @@ namespace EmailBugTracker.Tests
         [TestCase("(proj)- foobar", "proj", "foobar")]
         public async Task ResolvingProjectFromSubjectShouldWork(string subject, string expectedProject, string modifiedSubject = null)
         {
-            const string pat = "fake";
             const string org = "org";
             modifiedSubject = modifiedSubject ?? subject;
 
@@ -147,17 +131,13 @@ namespace EmailBugTracker.Tests
                     Content = new StringContent("ok"),
                 }));
 
-            var keyvault = new KeyvaultConfig
-            {
-                WorkItemPAT = pat
-            };
             var config = new WorkItemConfig
             {
                 Organization = org,
                 Project = null,
                 DetermineTargetProjectVia = DetermineTargetProjectVia.Subject
             };
-            var processor = new AzureDevOpsWorkItemProcessor(http.Object, keyvault, config);
+            var processor = new AzureDevOpsWorkItemProcessor(http.Object, config);
 
             var item = new WorkItem
             {
