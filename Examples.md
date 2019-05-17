@@ -4,7 +4,7 @@ If you have setup inbound parse for bugs.example.com, then all emails received a
 
 ## workitem config
 
-You can either configure these variables in the release pipeline or the ARM template (keyvault technically also works but that is intended for secrets).
+You can either configure these variables in the release pipeline (yaml) or the ARM template (keyvault technically also works but that is intended for secrets).
 
 ``` json
 {

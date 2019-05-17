@@ -65,7 +65,7 @@ stages:
     pool:
       name: 'Hosted Windows 2019 with VS2019'
     variables:
-      ResourceGroupName: 'email-bugtracker2'
+      ResourceGroupName: 'email-bugtracker'
 
     steps:
     - task: DownloadPipelineArtifact@1
@@ -87,7 +87,10 @@ stages:
     pool:
       name: 'Hosted Windows 2019 with VS2019'
     variables:
-      ResourceGroupName: 'email-bugtracker2'
+      ResourceGroupName: 'email-bugtracker'
+      Organization: marcstanlive
+      Project: Opensource
+      DetermineTargetProjectVia: Recipient
 
     steps:
     - task: DownloadPipelineArtifact@1
@@ -101,5 +104,6 @@ stages:
         azureSubscription: 'Opensource Deployments'
         appType: functionApp
         appName: '$(ResourceGroupName)'
+        appSettings: '-Organization $(Organization) -Project $(Project) -DetermineTargetProjectVia $(DetermineTargetProjectVia)'
         package: '$(System.DefaultWorkingDirectory)/function/EmailBugTracker'
         deploymentMethod: runFromPackage

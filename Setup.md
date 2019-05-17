@@ -21,7 +21,7 @@ Grant yourself get, list and set permissions for secrets.
 **Note:** Each deployment will reset the access policies to only contain the MSI of the function app (your access will be removed).
 
 1. Secret `WorkItemPAT` must contain a PAT that has at least write permissions for work items.
-2. Secret `AllowedRecipients` is optional. If set it contains the recipients that should be processed. 
+2. Secret `AllowedRecipients` is optional. If set it contains the recipients that should be processed.
 
     By default sendgrid forwards all emails but you may only want to open bugs for emails received at `bugs@example.com`. Multiple emails are allowed via `,;`seperators (`bugs@example.com;support@example.com,contact@example.com`).
 3. Secret `WhitelistedSenders` is optional. If set, only senders in its list are allowed to report bugs that create bug items in Azure DevOps. 
@@ -30,7 +30,9 @@ Grant yourself get, list and set permissions for secrets.
 
 ## 3. Code deployment
 
-Once the infrastructure is in place you can deploy the azure function code. via the release.
+Once the infrastructure is in place you can deploy the azure function code via the pipeline.
+
+Note that you will have change the variables in all stages (resource group name, azure subscription and settings).
 
 ## 4. Sendgrid setup
 
