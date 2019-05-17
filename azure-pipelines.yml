@@ -8,55 +8,99 @@ trigger:
   branches:
     include:
     - master
-  paths:
-    include:
-    - '*'
-    exclude:
-    - deploy/*
-pool:
-  name: Hosted
-variables:
-  BuildConfiguration: 'release'
-steps:
-- checkout: self
-  submodules: true
 
-- task: UseDotNet@2
-  inputs:
-    packageType: 'sdk'
-    version: '2.2.x'
+stages:
+- stage: build
+  jobs:
+  - job: build
+    pool:
+      name: 'Hosted Windows 2019 with VS2019'
+    variables:
+      BuildConfiguration: 'release'
+    steps:
+    - checkout: self
+      submodules: true
 
-- task: DotNetCoreCLI@2
-  displayName: Build
-  inputs:
-    projects: '**/*.csproj'
-    arguments: '--configuration $(BuildConfiguration) --no-cache'
+    - task: UseDotNet@2
+      inputs:
+        packageType: 'sdk'
+        version: '2.2.x'
+
+    - task: DotNetCoreCLI@2
+      displayName: Build
+      inputs:
+        projects: '**/*.csproj'
+        arguments: '--configuration $(BuildConfiguration) --no-cache'
     
-- task: DotNetCoreCLI@2
-  displayName: Test
-  inputs:
-    command: test
-    projects: '**/*Tests/*.csproj'
-    arguments: '--configuration $(BuildConfiguration)'
+    - task: DotNetCoreCLI@2
+      displayName: Test
+      inputs:
+        command: test
+        projects: '**/*Tests/*.csproj'
+        arguments: '--configuration $(BuildConfiguration)'
 
-- task: DotNetCoreCLI@2
-  displayName: Publish
-  inputs:
-    command: publish
-    publishWebProjects: false
-    projects: '**/EmailBugTracker.csproj'
-    arguments: '--configuration $(BuildConfiguration) --output $(build.artifactstagingdirectory)'
-    zipAfterPublish: false
+    - task: DotNetCoreCLI@2
+      displayName: Publish
+      inputs:
+        command: publish
+        publishWebProjects: false
+        projects: '**/EmailBugTracker.csproj'
+        arguments: '--configuration $(BuildConfiguration) --output $(build.artifactstagingdirectory)'
+        zipAfterPublish: false
 
-- task: PublishBuildArtifacts@1
-  displayName: 'Publish build Artifact'
-  inputs:
-    PathtoPublish: '$(build.artifactstagingdirectory)'
-    ArtifactName: function
+    - task: PublishPipelineArtifact@0
+      displayName: 'Publish build Artifact'
+      inputs:
+        PathtoPublish: '$(build.artifactstagingdirectory)'
+        ArtifactName: function
 
-- task: PublishBuildArtifacts@1
-  displayName: 'Publish Artifact: Infrastructure Scripts'
-  inputs:
-    PathtoPublish: deploy
+    - task: PublishPipelineArtifact@0
+      displayName: 'Publish Artifact: Infrastructure Scripts'
+      inputs:
+        PathtoPublish: deploy
+        ArtifactName: deploy
 
-    ArtifactName: deploy
+- stage: infrastructure
+  jobs:
+  - job: infra
+    pool:
+      name: 'Hosted Windows 2019 with VS2019'
+    variables:
+      ResourceGroupName: 'email-bugtracker'
+
+    steps:
+    - task: DownloadPipelineArtifact@1
+      inputs:
+        buildType: 'current'
+        targetPath: '$(System.DefaultWorkingDirectory)'
+
+    - task: AzurePowerShell@4
+      displayName: 'Azure PowerShell script: FilePath'
+      inputs:
+        azureSubscription: 'Opensource Deployments'
+        ScriptPath: '$(System.DefaultWorkingDirectory)/deploy/Deploy.ps1'
+        ScriptArguments: '-ResourceGroupName $(ResourceGroupName)'
+        azurePowerShellVersion: LatestVersion
+
+- stage: deployment
+  jobs:
+  - job: deploy
+    pool:
+      name: 'Hosted Windows 2019 with VS2019'
+    variables:
+      ResourceGroupName: 'email-bugtracker'
+
+    steps:
+    - task: DownloadPipelineArtifact@1
+      inputs:
+        buildType: 'current'
+        targetPath: '$(System.DefaultWorkingDirectory)'
+
+    - task: AzureFunctionApp@1
+      displayName: 'Deploy Azure Function App'
+      inputs:
+        azureSubscription: 'Opensource Deployments'
+        appType: functionApp
+        appName: '$(ResourceGroupName)'
+        package: '$(System.DefaultWorkingDirectory)/function/EmailBugTracker'
+        deploymentMethod: runFromPackage
