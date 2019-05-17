@@ -31,16 +31,17 @@ namespace EmailBugTracker
 
                 var workItemConfig = new WorkItemConfig();
                 config.Bind(workItemConfig);
-                var processor = new AzureDevOpsWorkItemProcessor(workItemConfig);
-                var logic = new EmailReceiverLogic(processor, telemetry);
 
-                var cfg = new KeyvaultConfig();
-                config.Bind(cfg);
+                var keyvaultConfig = new KeyvaultConfig();
+                config.Bind(keyvaultConfig);
+
+                var processor = new AzureDevOpsWorkItemProcessor(new HttpClient(new System.Net.Http.HttpClient(), keyvaultConfig), keyvaultConfig, workItemConfig);
+                var logic = new EmailReceiverLogic(processor, telemetry);
 
                 var parser = new HttpFormDataParser(telemetry);
                 var result = parser.Deserialize(req.Form);
 
-                await logic.RunAsync(cfg, result);
+                await logic.RunAsync(keyvaultConfig, result);
             }
             catch (Exception e)
             {

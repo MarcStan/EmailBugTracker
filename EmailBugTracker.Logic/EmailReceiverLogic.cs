@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -69,7 +70,11 @@ namespace EmailBugTracker.Logic
             return new WorkItem
             {
                 Title = param.Subject,
-                Content = param.Content ?? "No content"
+                Content = param.Content ?? "No content",
+                Metadata = new Dictionary<string, string>
+                {
+                    {"recipient", param.To }
+                }
             };
         }
     }
