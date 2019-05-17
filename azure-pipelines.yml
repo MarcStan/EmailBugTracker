@@ -19,7 +19,6 @@ stages:
       BuildConfiguration: 'release'
     steps:
     - checkout: self
-      submodules: true
 
     - task: UseDotNet@2
       inputs:
@@ -66,7 +65,7 @@ stages:
     pool:
       name: 'Hosted Windows 2019 with VS2019'
     variables:
-      ResourceGroupName: 'email-bugtracker'
+      ResourceGroupName: 'email-bugtracker2'
 
     steps:
     - task: DownloadPipelineArtifact@1
@@ -88,7 +87,7 @@ stages:
     pool:
       name: 'Hosted Windows 2019 with VS2019'
     variables:
-      ResourceGroupName: 'email-bugtracker'
+      ResourceGroupName: 'email-bugtracker2'
 
     steps:
     - task: DownloadPipelineArtifact@1
