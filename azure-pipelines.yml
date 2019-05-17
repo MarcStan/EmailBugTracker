@@ -88,8 +88,6 @@ stages:
       name: 'Hosted Windows 2019 with VS2019'
     variables:
       ResourceGroupName: 'email-bugtracker'
-      Organization: marcstan
-      Project: Opensource
       DetermineTargetProjectVia: Recipient
 
     steps:
@@ -104,6 +102,6 @@ stages:
         azureSubscription: 'Opensource Deployments'
         appType: functionApp
         appName: '$(ResourceGroupName)'
-        appSettings: '-Organization $(Organization) -Project $(Project) -DetermineTargetProjectVia $(DetermineTargetProjectVia)'
+        appSettings: '-DetermineTargetProjectVia $(DetermineTargetProjectVia)'
         package: '$(System.ArtifactsDirectory)/EmailBugTracker'
         deploymentMethod: runFromPackage
