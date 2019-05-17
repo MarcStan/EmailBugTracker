@@ -50,14 +50,14 @@ stages:
     - task: PublishPipelineArtifact@0
       displayName: 'Publish build Artifact'
       inputs:
-        PathtoPublish: '$(build.artifactstagingdirectory)'
-        ArtifactName: function
+        targetPath: '$(build.artifactstagingdirectory)'
+        artifactName: function
 
     - task: PublishPipelineArtifact@0
       displayName: 'Publish Artifact: Infrastructure Scripts'
       inputs:
-        PathtoPublish: deploy
-        ArtifactName: deploy
+        targetPath: deploy
+        artifactName: deploy
 
 - stage: infrastructure
   jobs:
@@ -70,14 +70,14 @@ stages:
     steps:
     - task: DownloadPipelineArtifact@1
       inputs:
-        buildType: 'current'
-        targetPath: '$(System.DefaultWorkingDirectory)'
+        artifactName: deploy
+        targetPath: '$(System.ArtifactsDirectory)'
 
     - task: AzurePowerShell@4
       displayName: 'Azure PowerShell script: FilePath'
       inputs:
         azureSubscription: 'Opensource Deployments'
-        ScriptPath: '$(System.DefaultWorkingDirectory)/deploy/Deploy.ps1'
+        ScriptPath: '$(System.ArtifactsDirectory)/Deploy.ps1'
         ScriptArguments: '-ResourceGroupName $(ResourceGroupName)'
         azurePowerShellVersion: LatestVersion
 
@@ -88,15 +88,15 @@ stages:
       name: 'Hosted Windows 2019 with VS2019'
     variables:
       ResourceGroupName: 'email-bugtracker'
-      Organization: marcstanlive
+      Organization: marcstan
       Project: Opensource
       DetermineTargetProjectVia: Recipient
 
     steps:
     - task: DownloadPipelineArtifact@1
       inputs:
-        buildType: 'current'
-        targetPath: '$(System.DefaultWorkingDirectory)'
+        artifactName: function
+        targetPath: '$(System.ArtifactsDirectory)'
 
     - task: AzureFunctionApp@1
       displayName: 'Deploy Azure Function App'
@@ -105,5 +105,5 @@ stages:
         appType: functionApp
         appName: '$(ResourceGroupName)'
         appSettings: '-Organization $(Organization) -Project $(Project) -DetermineTargetProjectVia $(DetermineTargetProjectVia)'
-        package: '$(System.DefaultWorkingDirectory)/function/EmailBugTracker'
+        package: '$(System.ArtifactsDirectory)/EmailBugTracker'
         deploymentMethod: runFromPackage
