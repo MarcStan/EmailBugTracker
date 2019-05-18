@@ -48,7 +48,13 @@ namespace EmailBugTracker.Logic
                 return true;
 
             var allowedEmails = whitelistedSenders.Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries);
-            if (allowedEmails.Any(e => e.Equals(from, StringComparison.OrdinalIgnoreCase)))
+            // reverse check to allow whitelisting entire domains as well
+            // e.g. "sender@foo.com".Contains("@foo.com") -> true
+            if (allowedEmails.Any(e => e.StartsWith("@") ?
+            // domain filter "@example.com"
+            from.EndsWith(e, StringComparison.OrdinalIgnoreCase) :
+            // single email e.g. "foo@example.com" -> make sure that filter "o@example.com" doesn't match it
+            e.Equals(from, StringComparison.OrdinalIgnoreCase)))
                 return true;
 
             return false;
