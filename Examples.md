@@ -6,26 +6,27 @@ If you have setup inbound parse for bugs.example.com, then all emails received a
 
 You can either configure these variables in the release pipeline (yaml) or the ARM template (keyvault technically also works but that is intended for secrets).
 
-``` json
-{
-    // dev.azure.com/{yourDevOpsName}
-    "Organization": "yourDevOpsName",
-    // leave blank to enable the routing options. If set, all emails will sent to this project
-    "Project": "",
-    // only used if Project is blank, see below for details
-    "DetermineTargetProjectVia": "All|Subject|Recipient"
-}
+```
+// dev.azure.com/{yourDevOpsName}
+Organization: "yourDevOpsName",
+// leave blank to enable the routing options. If set, all emails will sent to this project
+Project: "",
+// only used if Project is blank, see below for details
+DetermineTargetProjectVia: "All|Subject|Recipient",
+// you can either enter a single or multiple emails and/or a domains (seperated by ,;)
+// if a domain is entered, all emails of the domain are allowed
+AllowedRecipients: "bugs@example.com",
+// likewise you can either grant a list of emails or domains for senders
+WhitelistedSenders: "@org.example.com"
 ```
 
 ## Recipient based routing
 
 Only works if `Project` is left blank in the config.
 
-``` json
-{
-    // All also works, Recipient takes precedence over Subject
-    "DetermineTargetProjectVia": "Recipient"
-}
+```
+// All also works, Recipient takes precedence over Subject
+DetermineTargetProjectVia: "Recipient"
 ```
 
 If you have configured the function to parse the project name from the recipient then an email sent to `<project>@bugs.example.com` will be sent to the Azure DevOps project named `<project>`.
@@ -34,11 +35,9 @@ If you have configured the function to parse the project name from the recipient
 
 Only works if `Project` is left blank in the config.
 
-``` json
-{
-    // All also works, however Recipient takes precedence over Subject
-    "DetermineTargetProjectVia": "Subject"
-}
+```
+// All also works, however Recipient takes precedence over Subject
+DetermineTargetProjectVia: "Subject"
 ```
 
 Subject parsing will try to detect a pattern in the subject and infer the project name:

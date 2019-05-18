@@ -1,10 +1,12 @@
 # Initial setup
 
+Everything is fully automated via the yaml pipeline. Just plug it into your Azure DevOps and poin it to your subscription.
+
 ## 1. Deploy infrastructure
 
-First the infrastructure deployment is needed.
+First the infrastructure deployment is needed (stages 1 & 2).
 
-Build pipelines are provided and should set up the required infrastructure for you. You can run them with a free [Azure DevOps](https://azure.microsoft.com/services/devops/) account.
+The provided build pipeline should set up the required infrastructure for you in its second stage. You can run it with a free [Azure DevOps](https://azure.microsoft.com/services/devops/) account.
 
 All that is needed is the resourcegroup name for the release. By convention all resources are named the same as the resourcegroup. Storage account will have any dashes removed automatically due to its name limitation.
 
@@ -30,7 +32,7 @@ Grant yourself get, list and set permissions for secrets.
 
 ## 3. Code deployment
 
-Once the infrastructure is in place you can deploy the azure function code via the pipeline.
+Once the infrastructure is in place you can deploy the azure function code via the pipeline (last stage).
 
 Note that you will have change the variables in all stages (resource group name, azure subscription and settings).
 
