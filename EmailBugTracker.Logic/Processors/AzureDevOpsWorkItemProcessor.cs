@@ -1,4 +1,6 @@
-﻿using Newtonsoft.Json;
+﻿using EmailBugTracker.Logic.Config;
+using EmailBugTracker.Logic.Http;
+using Newtonsoft.Json;
 using System;
 using System.Linq;
 using System.Text.RegularExpressions;

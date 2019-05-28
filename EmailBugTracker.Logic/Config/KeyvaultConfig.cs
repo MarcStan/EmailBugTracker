@@ -1,4 +1,4 @@
-﻿namespace EmailBugTracker.Logic
+﻿namespace EmailBugTracker.Logic.Config
 {
     public class KeyvaultConfig
     {

@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace EmailBugTracker.Logic
+namespace EmailBugTracker.Logic.Config
 {
     [Flags]
     public enum DetermineTargetProjectVia

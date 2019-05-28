@@ -89,6 +89,7 @@ stages:
     variables:
       ResourceGroupName: 'email-bugtracker'
       DetermineTargetProjectVia: Recipient
+      AuditLogging: 'true'
 
     steps:
     - task: DownloadPipelineArtifact@1
@@ -102,6 +103,6 @@ stages:
         azureSubscription: 'Opensource Deployments'
         appType: functionApp
         appName: '$(ResourceGroupName)'
-        appSettings: '-DetermineTargetProjectVia $(DetermineTargetProjectVia)'
+        appSettings: '-DetermineTargetProjectVia $(DetermineTargetProjectVia) -AuditLogging $(AuditLogging)'
         package: '$(System.ArtifactsDirectory)/EmailBugTracker'
         deploymentMethod: runFromPackage

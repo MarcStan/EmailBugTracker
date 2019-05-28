@@ -1,8 +1,9 @@
-﻿using HtmlAgilityPack;
+﻿using EmailBugTracker.Logic.Config;
+using HtmlAgilityPack;
 using Microsoft.AspNetCore.Http;
 using System;
 
-namespace EmailBugTracker.Logic
+namespace EmailBugTracker.Logic.Http
 {
     public class HttpFormDataParser
     {

@@ -18,6 +18,7 @@
     // 1. Recipient - given a recipient "bugs@example.com" this will look for a project with the name "bugs"
     // 2. Subject - this will look for a prefix in the subject in the formats "[project]", "project - ", "project |" and fall back to the first word of the subject if none are matched
     // 3. All - all of the above
-    "DetermineTargetProjectVia": "All"
+    "DetermineTargetProjectVia": "All",
+    "AuditLogging": true
   }
 }

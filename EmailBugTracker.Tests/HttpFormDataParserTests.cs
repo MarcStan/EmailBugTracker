@@ -1,4 +1,5 @@
 ﻿using EmailBugTracker.Logic;
+using EmailBugTracker.Logic.Http;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Primitives;

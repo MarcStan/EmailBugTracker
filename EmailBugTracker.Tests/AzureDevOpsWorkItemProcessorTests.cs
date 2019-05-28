@@ -1,4 +1,6 @@
 ﻿using EmailBugTracker.Logic;
+using EmailBugTracker.Logic.Config;
+using EmailBugTracker.Logic.Http;
 using EmailBugTracker.Logic.Processors;
 using Moq;
 using NUnit.Framework;
