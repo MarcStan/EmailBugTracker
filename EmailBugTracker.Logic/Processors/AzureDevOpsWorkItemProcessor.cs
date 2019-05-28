@@ -1,4 +1,5 @@
-﻿using EmailBugTracker.Logic.Config;
+﻿using EmailBugTracker.Logic.Audit;
+using EmailBugTracker.Logic.Config;
 using EmailBugTracker.Logic.Http;
 using Newtonsoft.Json;
 using System;
@@ -12,11 +13,13 @@ namespace EmailBugTracker.Logic.Processors
     {
         private readonly IHttpClient _httpClient;
         private readonly WorkItemConfig _config;
+        private readonly IAuditLogger _auditLogger;
 
-        public AzureDevOpsWorkItemProcessor(IHttpClient httpClient, WorkItemConfig config)
+        public AzureDevOpsWorkItemProcessor(IHttpClient httpClient, WorkItemConfig config, IAuditLogger auditLogger)
         {
             _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
             _config = config ?? throw new ArgumentNullException(nameof(config));
+            _auditLogger = auditLogger ?? throw new ArgumentNullException(nameof(auditLogger));
         }
 
         public async Task ProcessWorkItemAsync(WorkItem workItem)
@@ -43,6 +46,14 @@ namespace EmailBugTracker.Logic.Processors
             });
             var response = await _httpClient.PostAsync($"https://dev.azure.com/{_config.Organization}/{project}/_apis/wit/workitems/$Bug?api-version=5.0", content);
             response.EnsureSuccessStatusCode();
+
+            await _auditLogger.LogAsync("bug", dict =>
+            {
+                dict["sender"] = workItem.Metadata["sender"];
+                dict["recipient"] = workItem.Metadata["recipient"];
+                dict["title"] = workItem.Title;
+                dict["content"] = workItem.Content;
+            });
         }
 
         /// <summary>

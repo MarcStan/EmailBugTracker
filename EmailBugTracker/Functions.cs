@@ -1,4 +1,5 @@
 using EmailBugTracker.Logic;
+using EmailBugTracker.Logic.Audit;
 using EmailBugTracker.Logic.Config;
 using EmailBugTracker.Logic.Http;
 using EmailBugTracker.Logic.Processors;
@@ -37,7 +38,11 @@ namespace EmailBugTracker
                 var keyvaultConfig = new KeyvaultConfig();
                 config.Bind(keyvaultConfig);
 
-                var processor = new AzureDevOpsWorkItemProcessor(new HttpClient(new System.Net.Http.HttpClient(), keyvaultConfig), workItemConfig);
+                IAuditLogger auditLogger = new NoOpAuditLogger();
+                if (!string.IsNullOrEmpty(workItemConfig.AuditContainerName))
+                    auditLogger = new BlobStorageAuditLogger(config["AzureWebJobsStorage"], workItemConfig.AuditContainerName);
+
+                var processor = new AzureDevOpsWorkItemProcessor(new HttpClient(new System.Net.Http.HttpClient(), keyvaultConfig), workItemConfig, auditLogger);
                 var logic = new EmailReceiverLogic(processor, telemetry);
 
                 var parser = new HttpFormDataParser(telemetry);

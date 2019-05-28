@@ -81,7 +81,8 @@ namespace EmailBugTracker.Logic
                 Content = param.Content ?? "No content",
                 Metadata = new Dictionary<string, string>
                 {
-                    {"recipient", param.To }
+                    {"recipient", param.To },
+                    {"sender", param.From }
                 }
             };
         }

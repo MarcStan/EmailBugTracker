@@ -7,5 +7,7 @@
         public string Organization { get; set; }
 
         public string Project { get; set; }
+
+        public string AuditContainerName { get; set; }
     }
 }

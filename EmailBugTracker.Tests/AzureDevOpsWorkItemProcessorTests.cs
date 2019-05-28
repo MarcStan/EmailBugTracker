@@ -1,9 +1,11 @@
 ﻿using EmailBugTracker.Logic;
+using EmailBugTracker.Logic.Audit;
 using EmailBugTracker.Logic.Config;
 using EmailBugTracker.Logic.Http;
 using EmailBugTracker.Logic.Processors;
 using Moq;
 using NUnit.Framework;
+using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Http;
@@ -34,13 +36,15 @@ namespace EmailBugTracker.Tests
                 Project = proj,
                 DetermineTargetProjectVia = DetermineTargetProjectVia.All
             };
-            var processor = new AzureDevOpsWorkItemProcessor(http.Object, config);
+            var audit = new Mock<IAuditLogger>();
+            var processor = new AzureDevOpsWorkItemProcessor(http.Object, config, audit.Object);
 
             await processor.ProcessWorkItemAsync(new WorkItem
             {
                 Title = "foo",
                 Content = "bar"
             });
+            audit.Verify(x => x.LogAsync("bug", It.IsAny<Action<Dictionary<string, string>>>()), Times.Once);
         }
 
         [Test]
@@ -64,7 +68,8 @@ namespace EmailBugTracker.Tests
                 Project = null,
                 DetermineTargetProjectVia = DetermineTargetProjectVia.All
             };
-            var processor = new AzureDevOpsWorkItemProcessor(http.Object, config);
+            var audit = new Mock<IAuditLogger>();
+            var processor = new AzureDevOpsWorkItemProcessor(http.Object, config, audit.Object);
 
             await processor.ProcessWorkItemAsync(new WorkItem
             {
@@ -75,6 +80,7 @@ namespace EmailBugTracker.Tests
                     { "recipient", proj + "@example.com" }
                 }
             });
+            audit.Verify(x => x.LogAsync("bug", It.IsAny<Action<Dictionary<string, string>>>()), Times.Once);
         }
 
         [Test]
@@ -98,7 +104,8 @@ namespace EmailBugTracker.Tests
                 Project = null,
                 DetermineTargetProjectVia = DetermineTargetProjectVia.All
             };
-            var processor = new AzureDevOpsWorkItemProcessor(http.Object, config);
+            var audit = new Mock<IAuditLogger>();
+            var processor = new AzureDevOpsWorkItemProcessor(http.Object, config, audit.Object);
 
             var item = new WorkItem
             {
@@ -110,6 +117,7 @@ namespace EmailBugTracker.Tests
                 }
             };
             await processor.ProcessWorkItemAsync(item);
+            audit.Verify(x => x.LogAsync("bug", It.IsAny<Action<Dictionary<string, string>>>()), Times.Once);
         }
 
         [TestCase("proj", "proj", "proj")]
@@ -139,7 +147,8 @@ namespace EmailBugTracker.Tests
                 Project = null,
                 DetermineTargetProjectVia = DetermineTargetProjectVia.Subject
             };
-            var processor = new AzureDevOpsWorkItemProcessor(http.Object, config);
+            var audit = new Mock<IAuditLogger>();
+            var processor = new AzureDevOpsWorkItemProcessor(http.Object, config, audit.Object);
 
             var item = new WorkItem
             {
@@ -147,6 +156,7 @@ namespace EmailBugTracker.Tests
                 Content = "bar"
             };
             await processor.ProcessWorkItemAsync(item);
+            audit.Verify(x => x.LogAsync("bug", It.IsAny<Action<Dictionary<string, string>>>()), Times.Once);
         }
     }
 }

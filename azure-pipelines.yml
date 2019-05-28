@@ -89,7 +89,8 @@ stages:
     variables:
       ResourceGroupName: 'email-bugtracker'
       DetermineTargetProjectVia: Recipient
-      AuditLogging: 'true'
+      # null if you wish to disable audit logging (captures full reports into a storage account incl. sender email)
+      AuditContainerName: 'audit'
 
     steps:
     - task: DownloadPipelineArtifact@1
@@ -103,6 +104,6 @@ stages:
         azureSubscription: 'Opensource Deployments'
         appType: functionApp
         appName: '$(ResourceGroupName)'
-        appSettings: '-DetermineTargetProjectVia $(DetermineTargetProjectVia) -AuditLogging $(AuditLogging)'
+        appSettings: '-DetermineTargetProjectVia $(DetermineTargetProjectVia) -AuditContainerName $(AuditContainerName)'
         package: '$(System.ArtifactsDirectory)/EmailBugTracker'
         deploymentMethod: runFromPackage
