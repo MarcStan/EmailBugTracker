@@ -65,7 +65,7 @@ stages:
     pool:
       name: 'Hosted Windows 2019 with VS2019'
     variables:
-      ResourceGroupName: 'bugtracker'
+      ResourceGroupName: 'email-bugtracker'
 
     steps:
     - task: DownloadPipelineArtifact@1
@@ -86,7 +86,7 @@ stages:
     pool:
       name: 'Hosted Windows 2019 with VS2019'
     variables:
-      ResourceGroupName: 'bugtracker'
+      ResourceGroupName: 'email-bugtracker'
       DetermineTargetProjectVia: Recipient
       # null if you wish to disable audit logging (captures full reports into a storage account incl. sender email)
       AuditContainerName: 'audit'
