@@ -1,17 +1,18 @@
 ﻿using EmailBugTracker.Logic.Config;
 using HtmlAgilityPack;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
 using System;
 
 namespace EmailBugTracker.Logic.Http
 {
     public class HttpFormDataParser
     {
-        private readonly ITelemetry _telemetry;
+        private readonly ILogger _log;
 
-        public HttpFormDataParser(ITelemetry telemetry)
+        public HttpFormDataParser(ILogger log)
         {
-            _telemetry = telemetry ?? throw new ArgumentNullException(nameof(telemetry));
+            _log = log ?? throw new ArgumentNullException(nameof(log));
         }
 
         public SendgridParameters Deserialize(IFormCollection form)
@@ -27,7 +28,7 @@ namespace EmailBugTracker.Logic.Http
             catch (Exception e)
             {
                 // fallback to raw html if parser fails
-                _telemetry.TrackException(e);
+                _log.LogError(e, "Failed to deserialize form into email!");
                 param.Content = form["text"];
                 if (string.IsNullOrWhiteSpace(param.Content))
                     param.Content = form["html"];

@@ -5,9 +5,7 @@
     // for production values either override them in the the ARM template or release (for non secrets) or in the keyvault (for secrets)
     "AzureWebJobsStorage": "UseDevelopmentStorage=true",
     "FUNCTIONS_WORKER_RUNTIME": "dotnet",
-    "KeyvaultName": "email-bugtracker",
-    // use Visual Studio integration locally
-    "APPINSIGHTS_INSTRUMENTATIONKEY": "",
+    "KeyvaultName": "email-bugtracker"
     // the Azure DevOps organization target
     // if empty, will determine it automatically during the release process (assumes you are using Azure Pipelines)
     "Organization": "marcstan-public",

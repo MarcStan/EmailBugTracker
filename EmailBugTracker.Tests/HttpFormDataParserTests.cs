@@ -1,7 +1,7 @@
-﻿using EmailBugTracker.Logic;
-using EmailBugTracker.Logic.Http;
+﻿using EmailBugTracker.Logic.Http;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Primitives;
 using Moq;
 using NUnit.Framework;
@@ -16,7 +16,7 @@ namespace EmailBugTracker.Tests
         [Test]
         public void ParsingSimpleFormShouldWork()
         {
-            var parser = new HttpFormDataParser(new Mock<ITelemetry>().Object);
+            var parser = new HttpFormDataParser(new Mock<ILogger>().Object);
 
             var form = Build(new Dictionary<string, string>
             {
@@ -35,7 +35,7 @@ namespace EmailBugTracker.Tests
         [Test]
         public void ParsingDisplayNamesShouldWork()
         {
-            var parser = new HttpFormDataParser(new Mock<ITelemetry>().Object);
+            var parser = new HttpFormDataParser(new Mock<ILogger>().Object);
 
             var form = Build(new Dictionary<string, string>
             {
@@ -54,7 +54,7 @@ namespace EmailBugTracker.Tests
         [Test]
         public void ParsingHtmlShouldWorkAndExcludeSignature()
         {
-            var parser = new HttpFormDataParser(new Mock<ITelemetry>().Object);
+            var parser = new HttpFormDataParser(new Mock<ILogger>().Object);
 
             const string actualContent = "Only this should be submitted";
             var form = Build(new Dictionary<string, string>
@@ -96,7 +96,7 @@ Regards,
         [Test]
         public void HtmlShouldBePreferredOverText()
         {
-            var parser = new HttpFormDataParser(new Mock<ITelemetry>().Object);
+            var parser = new HttpFormDataParser(new Mock<ILogger>().Object);
 
             const string actualContent = "Only this should be submitted";
             var form = Build(new Dictionary<string, string>
@@ -139,7 +139,7 @@ Regards,
         [Test]
         public void TextShouldBeFallbackIfHtmlFails()
         {
-            var parser = new HttpFormDataParser(new Mock<ITelemetry>().Object);
+            var parser = new HttpFormDataParser(new Mock<ILogger>().Object);
 
             const string actualContent = "Only this should be submitted";
             var form = Build(new Dictionary<string, string>
@@ -182,7 +182,7 @@ Regards,
         [Test]
         public void RawHtmlShouldBeFallbackIfHtmlParsingFailsAndTextMissing()
         {
-            var parser = new HttpFormDataParser(new Mock<ITelemetry>().Object);
+            var parser = new HttpFormDataParser(new Mock<ILogger>().Object);
 
             const string actualContent = "Only this should be submitted";
             var rawHtml = @"<html>

@@ -3,7 +3,6 @@ using EmailBugTracker.Logic.Audit;
 using EmailBugTracker.Logic.Config;
 using EmailBugTracker.Logic.Http;
 using EmailBugTracker.Logic.Processors;
-using Microsoft.ApplicationInsights;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.KeyVault;
@@ -14,6 +13,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Configuration.AzureKeyVault;
 using Microsoft.Extensions.Logging;
 using System;
+using System.Net.Http;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace EmailBugTracker
@@ -23,14 +24,13 @@ namespace EmailBugTracker
         [FunctionName("bugreport")]
         public static async Task<IActionResult> Run(
             [HttpTrigger(AuthorizationLevel.Function, "post", Route = null)] HttpRequest req,
-            ExecutionContext context,
-            ILogger log)
+            Microsoft.Azure.WebJobs.ExecutionContext context,
+            ILogger log,
+            CancellationToken cancellationToken)
         {
-            var telemetryClient = new TelemetryClient();
             try
             {
-                var config = LoadConfig(context.FunctionAppDirectory, log, telemetryClient);
-                var telemetry = new Telemetry(telemetryClient);
+                var config = LoadConfig(context.FunctionAppDirectory, log);
 
                 var workItemConfig = new WorkItemConfig();
                 config.Bind(workItemConfig);
@@ -42,35 +42,27 @@ namespace EmailBugTracker
                 if (!string.IsNullOrEmpty(workItemConfig.AuditContainerName))
                     auditLogger = new BlobStorageAuditLogger(config["AzureWebJobsStorage"], workItemConfig.AuditContainerName);
 
-                var processor = new AzureDevOpsWorkItemProcessor(new HttpClient(new System.Net.Http.HttpClient(), keyvaultConfig), workItemConfig, auditLogger);
-                var logic = new EmailReceiverLogic(processor, telemetry);
+                var handler = new AuthenticationHandler(keyvaultConfig);
+                var processor = new AzureDevOpsWorkItemProcessor(new HttpClient(handler), workItemConfig, auditLogger);
+                var logic = new EmailReceiverLogic(processor, log);
 
-                var parser = new HttpFormDataParser(telemetry);
+                var parser = new HttpFormDataParser(log);
                 var result = parser.Deserialize(req.Form);
 
-                await logic.RunAsync(keyvaultConfig, result);
+                await logic.RunAsync(keyvaultConfig, result, cancellationToken);
             }
             catch (Exception e)
             {
-                telemetryClient.TrackException(e);
+                log.LogCritical(e, "Request failed!");
                 return new BadRequestResult();
             }
             return new OkResult();
         }
 
-        private static void SetApplicationInsightsKeyIfExists(TelemetryClient telemetry, IConfiguration config, ILogger log)
-        {
-            var key = config["APPINSIGHTS_INSTRUMENTATIONKEY"];
-            if (!string.IsNullOrEmpty(key))
-                telemetry.InstrumentationKey = key;
-            else
-                log.LogWarning("Application insights key not set!");
-        }
-
         /// <summary>
         /// Helper that loads the config values from file, environment variables and keyvault.
         /// </summary>
-        private static IConfiguration LoadConfig(string workingDirectory, ILogger log, TelemetryClient telemetry)
+        private static IConfiguration LoadConfig(string workingDirectory, ILogger log)
         {
             try
             {
@@ -81,10 +73,8 @@ namespace EmailBugTracker
                 var tmpConfig = builder.Build();
 
                 // build config from files only first
-                // A) to get the keycault address..
+                // to get the keycault address..
                 var keyvault = tmpConfig["KeyVaultName"];
-                // B) to hook up AI for early error reporting
-                SetApplicationInsightsKeyIfExists(telemetry, tmpConfig, log);
 
                 var tokenProvider = new AzureServiceTokenProvider();
                 var kvClient = new KeyVaultClient(new KeyVaultClient.AuthenticationCallback(tokenProvider.KeyVaultTokenCallback));
@@ -95,7 +85,6 @@ namespace EmailBugTracker
             }
             catch (Exception e)
             {
-                telemetry.TrackException(e);
                 log.LogCritical($"Failed accessing the keyvault: '{e.Message}'. Possible reason: You are debugging locally (in which case you must add your user account to the keyvault access policies manually). Note that the infrastructure deployment will reset the keyvault policies to only allow the azure function MSI! More details on local fallback here: https://docs.microsoft.com/en-us/azure/key-vault/service-to-service-authentication#local-development-authentication");
                 throw;
             }

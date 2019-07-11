@@ -1,7 +1,6 @@
 ﻿using EmailBugTracker.Logic;
 using EmailBugTracker.Logic.Audit;
 using EmailBugTracker.Logic.Config;
-using EmailBugTracker.Logic.Http;
 using EmailBugTracker.Logic.Processors;
 using Moq;
 using NUnit.Framework;
@@ -9,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Http;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace EmailBugTracker.Tests
@@ -22,13 +22,17 @@ namespace EmailBugTracker.Tests
             const string proj = "proj";
 
             var expected = $"https://dev.azure.com/{org}/{proj}/_apis/wit/workitems/$Bug?api-version=5.0";
-            var http = new Mock<IHttpClient>();
-            http.Setup(x => x.PostAsync(expected, It.IsAny<string>(), It.IsAny<string>()))
-                .Returns(Task.FromResult(new HttpResponseMessage()
+            var client = CreateClient(_ =>
+            {
+                if (_.RequestUri.ToString() != expected)
+                    return new HttpResponseMessage { StatusCode = HttpStatusCode.NotFound };
+
+                return new HttpResponseMessage
                 {
                     StatusCode = HttpStatusCode.OK,
                     Content = new StringContent("ok"),
-                }));
+                };
+            });
 
             var config = new WorkItemConfig
             {
@@ -37,13 +41,13 @@ namespace EmailBugTracker.Tests
                 DetermineTargetProjectVia = DetermineTargetProjectVia.All
             };
             var audit = new Mock<IAuditLogger>();
-            var processor = new AzureDevOpsWorkItemProcessor(http.Object, config, audit.Object);
+            var processor = new AzureDevOpsWorkItemProcessor(client, config, audit.Object);
 
             await processor.ProcessWorkItemAsync(new WorkItem
             {
                 Title = "foo",
                 Content = "bar"
-            });
+            }, CancellationToken.None);
             audit.Verify(x => x.LogAsync("bug", It.IsAny<Action<Dictionary<string, string>>>()), Times.Once);
         }
 
@@ -54,13 +58,17 @@ namespace EmailBugTracker.Tests
             const string proj = "proj";
 
             var expected = $"https://dev.azure.com/{org}/{proj}/_apis/wit/workitems/$Bug?api-version=5.0";
-            var http = new Mock<IHttpClient>();
-            http.Setup(x => x.PostAsync(expected, It.IsAny<string>(), It.IsAny<string>()))
-                .Returns(Task.FromResult(new HttpResponseMessage()
+            var client = CreateClient(_ =>
+            {
+                if (_.RequestUri.ToString() != expected)
+                    return new HttpResponseMessage { StatusCode = HttpStatusCode.NotFound };
+
+                return new HttpResponseMessage
                 {
                     StatusCode = HttpStatusCode.OK,
                     Content = new StringContent("ok"),
-                }));
+                };
+            });
 
             var config = new WorkItemConfig
             {
@@ -69,7 +77,7 @@ namespace EmailBugTracker.Tests
                 DetermineTargetProjectVia = DetermineTargetProjectVia.All
             };
             var audit = new Mock<IAuditLogger>();
-            var processor = new AzureDevOpsWorkItemProcessor(http.Object, config, audit.Object);
+            var processor = new AzureDevOpsWorkItemProcessor(client, config, audit.Object);
 
             await processor.ProcessWorkItemAsync(new WorkItem
             {
@@ -79,7 +87,7 @@ namespace EmailBugTracker.Tests
                 {
                     { "recipient", proj + "@example.com" }
                 }
-            });
+            }, CancellationToken.None);
             audit.Verify(x => x.LogAsync("bug", It.IsAny<Action<Dictionary<string, string>>>()), Times.Once);
         }
 
@@ -89,14 +97,17 @@ namespace EmailBugTracker.Tests
             const string org = "org";
 
             var expected = $"https://dev.azure.com/{org}/project/_apis/wit/workitems/$Bug?api-version=5.0";
-            var http = new Mock<IHttpClient>();
-            // ensure uri and title match in request
-            http.Setup(x => x.PostAsync(expected, It.Is<string>(c => c.Contains("\"value\":\"foobar\"")), It.IsAny<string>()))
-                .Returns(Task.FromResult(new HttpResponseMessage()
+            var client = CreateClient(_ =>
+            {
+                if (_.RequestUri.ToString() != expected)
+                    return new HttpResponseMessage { StatusCode = HttpStatusCode.NotFound };
+
+                return new HttpResponseMessage
                 {
                     StatusCode = HttpStatusCode.OK,
                     Content = new StringContent("ok"),
-                }));
+                };
+            });
 
             var config = new WorkItemConfig
             {
@@ -105,7 +116,7 @@ namespace EmailBugTracker.Tests
                 DetermineTargetProjectVia = DetermineTargetProjectVia.All
             };
             var audit = new Mock<IAuditLogger>();
-            var processor = new AzureDevOpsWorkItemProcessor(http.Object, config, audit.Object);
+            var processor = new AzureDevOpsWorkItemProcessor(client, config, audit.Object);
 
             var item = new WorkItem
             {
@@ -116,7 +127,7 @@ namespace EmailBugTracker.Tests
                     { "recipient", "project@example.com" }
                 }
             };
-            await processor.ProcessWorkItemAsync(item);
+            await processor.ProcessWorkItemAsync(item, CancellationToken.None);
             audit.Verify(x => x.LogAsync("bug", It.IsAny<Action<Dictionary<string, string>>>()), Times.Once);
         }
 
@@ -132,14 +143,17 @@ namespace EmailBugTracker.Tests
             modifiedSubject = modifiedSubject ?? subject;
 
             var expected = $"https://dev.azure.com/{org}/{expectedProject}/_apis/wit/workitems/$Bug?api-version=5.0";
-            var http = new Mock<IHttpClient>();
-            // ensure uri and title match in request
-            http.Setup(x => x.PostAsync(expected, It.Is<string>(c => c.Contains($"\"value\":\"{modifiedSubject}\"")), It.IsAny<string>()))
-                .Returns(Task.FromResult(new HttpResponseMessage()
+            var client = CreateClient(_ =>
+            {
+                if (_.RequestUri.ToString() != expected)
+                    return new HttpResponseMessage { StatusCode = HttpStatusCode.NotFound };
+
+                return new HttpResponseMessage
                 {
                     StatusCode = HttpStatusCode.OK,
                     Content = new StringContent("ok"),
-                }));
+                };
+            });
 
             var config = new WorkItemConfig
             {
@@ -148,15 +162,35 @@ namespace EmailBugTracker.Tests
                 DetermineTargetProjectVia = DetermineTargetProjectVia.Subject
             };
             var audit = new Mock<IAuditLogger>();
-            var processor = new AzureDevOpsWorkItemProcessor(http.Object, config, audit.Object);
+            var processor = new AzureDevOpsWorkItemProcessor(client, config, audit.Object);
 
             var item = new WorkItem
             {
                 Title = subject,
                 Content = "bar"
             };
-            await processor.ProcessWorkItemAsync(item);
+            await processor.ProcessWorkItemAsync(item, CancellationToken.None);
             audit.Verify(x => x.LogAsync("bug", It.IsAny<Action<Dictionary<string, string>>>()), Times.Once);
+        }
+
+        private HttpClient CreateClient(Func<HttpRequestMessage, HttpResponseMessage> func)
+        {
+            return new HttpClient(new FuncHandler(func));
+        }
+
+        public class FuncHandler : HttpMessageHandler
+        {
+            private readonly Func<HttpRequestMessage, HttpResponseMessage> _func;
+
+            public FuncHandler(Func<HttpRequestMessage, HttpResponseMessage> func)
+            {
+                _func = func ?? throw new ArgumentNullException(nameof(func));
+            }
+
+            protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+            {
+                return Task.FromResult(_func(request));
+            }
         }
     }
 }

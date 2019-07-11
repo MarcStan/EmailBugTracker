@@ -1,9 +1,11 @@
 ﻿using EmailBugTracker.Logic;
 using EmailBugTracker.Logic.Config;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Internal;
 using Moq;
 using NUnit.Framework;
 using System;
-using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace EmailBugTracker.Tests
@@ -13,9 +15,9 @@ namespace EmailBugTracker.Tests
         [Test]
         public async Task WhenSenderWhitelistIsUsedThenOtherSendersShouldBeDiscarded()
         {
-            var telemetry = new Mock<ITelemetry>();
+            var logger = new Mock<ILogger>();
             var processor = new Mock<IWorkItemProcessor>();
-            var logic = new EmailReceiverLogic(processor.Object, telemetry.Object);
+            var logic = new EmailReceiverLogic(processor.Object, logger.Object);
 
             var config = new KeyvaultConfig
             {
@@ -28,17 +30,17 @@ namespace EmailBugTracker.Tests
                 To = "bugs@example.com",
                 Subject = "Test"
             };
-            await logic.RunAsync(config, param);
+            await logic.RunAsync(config, param, CancellationToken.None);
 
-            telemetry.Verify(x => x.TrackEvent("Non-whitelisted sender", It.IsAny<Action<Dictionary<string, string>>>()));
+            Verify(logger, "Non-whitelisted sender", LogLevel.Warning);
         }
 
         [Test]
         public async Task WhenSenderWhitelistIsUsedWithADomainThenAllSendersOfTHeDomainShouldBeAllowed()
         {
-            var telemetry = new Mock<ITelemetry>();
+            var logger = new Mock<ILogger>();
             var processor = new Mock<IWorkItemProcessor>();
-            var logic = new EmailReceiverLogic(processor.Object, telemetry.Object);
+            var logic = new EmailReceiverLogic(processor.Object, logger.Object);
 
             var config = new KeyvaultConfig
             {
@@ -51,17 +53,17 @@ namespace EmailBugTracker.Tests
                 To = "bugs@example.com",
                 Subject = "Test"
             };
-            await logic.RunAsync(config, param);
+            await logic.RunAsync(config, param, CancellationToken.None);
 
-            telemetry.Verify(x => x.TrackEvent("Work item created", It.IsAny<Action<Dictionary<string, string>>>()));
+            Verify(logger, "Work item created", LogLevel.Information);
         }
 
         [Test]
         public async Task WhenSenderWhitelistIsUsedWithADomainThenOtherSendersShouldBeDiscarded()
         {
-            var telemetry = new Mock<ITelemetry>();
+            var logger = new Mock<ILogger>();
             var processor = new Mock<IWorkItemProcessor>();
-            var logic = new EmailReceiverLogic(processor.Object, telemetry.Object);
+            var logic = new EmailReceiverLogic(processor.Object, logger.Object);
 
             var config = new KeyvaultConfig
             {
@@ -74,17 +76,17 @@ namespace EmailBugTracker.Tests
                 To = "bugs@example.com",
                 Subject = "Test"
             };
-            await logic.RunAsync(config, param);
+            await logic.RunAsync(config, param, CancellationToken.None);
 
-            telemetry.Verify(x => x.TrackEvent("Non-whitelisted sender", It.IsAny<Action<Dictionary<string, string>>>()));
+            Verify(logger, "Non-whitelisted sender", LogLevel.Warning);
         }
 
         [Test]
         public async Task WhenSenderWhitelistIsNotUsedThenAnySendersShouldBeAllowed()
         {
-            var telemetry = new Mock<ITelemetry>();
+            var logger = new Mock<ILogger>();
             var processor = new Mock<IWorkItemProcessor>();
-            var logic = new EmailReceiverLogic(processor.Object, telemetry.Object);
+            var logic = new EmailReceiverLogic(processor.Object, logger.Object);
 
             var config = new KeyvaultConfig
             {
@@ -97,17 +99,17 @@ namespace EmailBugTracker.Tests
                 To = "bugs@example.com",
                 Subject = "Test"
             };
-            await logic.RunAsync(config, param);
+            await logic.RunAsync(config, param, CancellationToken.None);
 
-            telemetry.Verify(x => x.TrackEvent("Work item created", It.IsAny<Action<Dictionary<string, string>>>()));
+            Verify(logger, "Work item created", LogLevel.Information);
         }
 
         [Test]
         public async Task WhenRecipientWhitelistIsUsedThenOtherRecipientsShouldBeDiscarded()
         {
-            var telemetry = new Mock<ITelemetry>();
+            var logger = new Mock<ILogger>();
             var processor = new Mock<IWorkItemProcessor>();
-            var logic = new EmailReceiverLogic(processor.Object, telemetry.Object);
+            var logic = new EmailReceiverLogic(processor.Object, logger.Object);
 
             var config = new KeyvaultConfig
             {
@@ -120,17 +122,17 @@ namespace EmailBugTracker.Tests
                 To = "notbugs@example.com",
                 Subject = "Test"
             };
-            await logic.RunAsync(config, param);
+            await logic.RunAsync(config, param, CancellationToken.None);
 
-            telemetry.Verify(x => x.TrackEvent("Non-whitelisted recipient", It.IsAny<Action<Dictionary<string, string>>>()));
+            Verify(logger, "Non-whitelisted recipient", LogLevel.Warning);
         }
 
         [Test]
         public async Task WhenSenderWhitelistIsUsedWithDomainThenAnySenderOfTheDomainShouldBeAllowed()
         {
-            var telemetry = new Mock<ITelemetry>();
+            var logger = new Mock<ILogger>();
             var processor = new Mock<IWorkItemProcessor>();
-            var logic = new EmailReceiverLogic(processor.Object, telemetry.Object);
+            var logic = new EmailReceiverLogic(processor.Object, logger.Object);
 
             var config = new KeyvaultConfig
             {
@@ -143,17 +145,17 @@ namespace EmailBugTracker.Tests
                 To = "anything@example.com",
                 Subject = "Test"
             };
-            await logic.RunAsync(config, param);
+            await logic.RunAsync(config, param, CancellationToken.None);
 
-            telemetry.Verify(x => x.TrackEvent("Work item created", It.IsAny<Action<Dictionary<string, string>>>()));
+            Verify(logger, "Work item created", LogLevel.Information);
         }
 
         [Test]
         public async Task WhenRecipientWhitelistWithDomainIsUsedThenOtherRecipientsShouldBeDiscarded()
         {
-            var telemetry = new Mock<ITelemetry>();
+            var logger = new Mock<ILogger>();
             var processor = new Mock<IWorkItemProcessor>();
-            var logic = new EmailReceiverLogic(processor.Object, telemetry.Object);
+            var logic = new EmailReceiverLogic(processor.Object, logger.Object);
 
             var config = new KeyvaultConfig
             {
@@ -166,17 +168,17 @@ namespace EmailBugTracker.Tests
                 To = "bugs@example2.com",
                 Subject = "Test"
             };
-            await logic.RunAsync(config, param);
+            await logic.RunAsync(config, param, CancellationToken.None);
 
-            telemetry.Verify(x => x.TrackEvent("Non-whitelisted recipient", It.IsAny<Action<Dictionary<string, string>>>()));
+            Verify(logger, "Non-whitelisted recipient", LogLevel.Warning);
         }
 
         [Test]
         public async Task WhenRecipientWhitelistIsNotUsedThenAnyRecipientShouldBeAllowed()
         {
-            var telemetry = new Mock<ITelemetry>();
+            var logger = new Mock<ILogger>();
             var processor = new Mock<IWorkItemProcessor>();
-            var logic = new EmailReceiverLogic(processor.Object, telemetry.Object);
+            var logic = new EmailReceiverLogic(processor.Object, logger.Object);
 
             var config = new KeyvaultConfig
             {
@@ -189,9 +191,14 @@ namespace EmailBugTracker.Tests
                 To = "someone@example.com",
                 Subject = "Test"
             };
-            await logic.RunAsync(config, param);
+            await logic.RunAsync(config, param, CancellationToken.None);
 
-            telemetry.Verify(x => x.TrackEvent("Work item created", It.IsAny<Action<Dictionary<string, string>>>()));
+            Verify(logger, "Work item created", LogLevel.Information);
+        }
+
+        private void Verify(Mock<ILogger> logger, string v, LogLevel level)
+        {
+            logger.Verify(x => x.Log(level, It.IsAny<EventId>(), It.Is<object>(o => ((string)((FormattedLogValues)o)[0].Value).Contains(v)), null, It.IsAny<Func<object, Exception, string>>()));
         }
     }
 }

@@ -1,46 +1,44 @@
 ﻿using EmailBugTracker.Logic.Config;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace EmailBugTracker.Logic
 {
     public class EmailReceiverLogic
     {
-        private readonly ITelemetry _telemetry;
+        private readonly ILogger _log;
         private readonly IWorkItemProcessor _workitemProcessor;
 
         public EmailReceiverLogic(
             IWorkItemProcessor workitemProcessor,
-            ITelemetry telemetry)
+            ILogger log)
         {
             _workitemProcessor = workitemProcessor ?? throw new ArgumentNullException(nameof(workitemProcessor));
-            _telemetry = telemetry ?? throw new ArgumentNullException(nameof(telemetry));
+            _log = log ?? throw new ArgumentNullException(nameof(log));
         }
 
-        public async Task RunAsync(KeyvaultConfig cfg, SendgridParameters param)
+        public async Task RunAsync(KeyvaultConfig cfg, SendgridParameters param, CancellationToken cancellationToken)
         {
             Validate(param);
             if (!IsWhitelisted(param.From, cfg.WhitelistedSenders))
             {
-                _telemetry.TrackEvent("Non-whitelisted sender", dict => dict["sender"] = EmailAnonymization.PseudoAnonymize(param.From));
+                _log.LogWarning($"Non-whitelisted sender: {EmailAnonymization.PseudoAnonymize(param.From)}");
                 return;
             }
             if (!IsWhitelisted(param.To, cfg.AllowedRecipients))
             {
-                _telemetry.TrackEvent("Non-whitelisted recipient", dict => dict["recipient"] = EmailAnonymization.PseudoAnonymize(param.To));
+                _log.LogWarning($"Non-whitelisted recipient: {EmailAnonymization.PseudoAnonymize(param.To)}");
                 return;
             }
 
             var workItem = Parse(param);
-            await _workitemProcessor.ProcessWorkItemAsync(workItem);
-            _telemetry.TrackEvent("Work item created", dict =>
-            {
-                dict["title"] = workItem.Title;
-                dict["sender"] = EmailAnonymization.PseudoAnonymize(param.From);
-                dict["project"] = workItem.Metadata["project"];
-            });
+            await _workitemProcessor.ProcessWorkItemAsync(workItem, cancellationToken);
+            var project = workItem.Metadata.ContainsKey("project") ? workItem.Metadata["project"] : "no project";
+            _log.LogInformation($"Work item created: project: '{project}', title: '{workItem.Title}' by: {EmailAnonymization.PseudoAnonymize(param.From)}");
         }
 
         private bool IsWhitelisted(string from, string whitelistedSenders)

@@ -1,34 +1,36 @@
 ﻿using EmailBugTracker.Logic.Audit;
 using EmailBugTracker.Logic.Config;
-using EmailBugTracker.Logic.Http;
 using Newtonsoft.Json;
 using System;
 using System.Linq;
+using System.Net.Http;
+using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace EmailBugTracker.Logic.Processors
 {
     public class AzureDevOpsWorkItemProcessor : IWorkItemProcessor
     {
-        private readonly IHttpClient _httpClient;
+        private readonly HttpClient _httpClient;
         private readonly WorkItemConfig _config;
         private readonly IAuditLogger _auditLogger;
 
-        public AzureDevOpsWorkItemProcessor(IHttpClient httpClient, WorkItemConfig config, IAuditLogger auditLogger)
+        public AzureDevOpsWorkItemProcessor(HttpClient httpClient, WorkItemConfig config, IAuditLogger auditLogger)
         {
             _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
             _config = config ?? throw new ArgumentNullException(nameof(config));
             _auditLogger = auditLogger ?? throw new ArgumentNullException(nameof(auditLogger));
         }
 
-        public async Task ProcessWorkItemAsync(WorkItem workItem)
+        public async Task ProcessWorkItemAsync(WorkItem workItem, CancellationToken cancellationToken)
         {
             var project = GetProject(workItem);
             workItem.Metadata["project"] = project;
 
             // https://docs.microsoft.com/en-us/rest/api/azure/devops/wit/work%20items/create?view=azure-devops-rest-5.0
-            var content = JsonConvert.SerializeObject(new[]
+            var json = JsonConvert.SerializeObject(new[]
             {
                 // https://docs.microsoft.com/en-us/azure/devops/boards/work-items/guidance/work-item-field?view=azure-devops
                 new
@@ -44,7 +46,8 @@ namespace EmailBugTracker.Logic.Processors
                     value = workItem.Content
                 }
             });
-            var response = await _httpClient.PostAsync($"https://dev.azure.com/{_config.Organization}/{project}/_apis/wit/workitems/$Bug?api-version=5.0", content);
+            var content = new StringContent(json, Encoding.UTF8, "application/json-patch+json");
+            var response = await _httpClient.PostAsync($"https://dev.azure.com/{_config.Organization}/{project}/_apis/wit/workitems/$Bug?api-version=5.0", content, cancellationToken);
             response.EnsureSuccessStatusCode();
 
             await _auditLogger.LogAsync("bug", dict =>
