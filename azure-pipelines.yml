@@ -18,7 +18,7 @@ schedules:
 stages:
 - stage: build
   jobs:
-  - job: build
+  - job: 'build function'
     pool:
       name: 'Hosted Windows 2019 with VS2019'
     variables:
@@ -65,13 +65,15 @@ stages:
         targetPath: deploy
         artifactName: deploy
 
-- stage: deploy
+- stage: release
   jobs:
   - job: infra
     pool:
       name: 'Hosted Windows 2019 with VS2019'
     variables:
-      ResourceGroupName: 'email-bugtracker'
+    - group: 'Deployment Credentials'
+    - name: ResourceGroupName
+      value: 'email-bugtracker'
 
     steps:
     - task: DownloadPipelineArtifact@1
@@ -87,15 +89,19 @@ stages:
         ScriptArguments: '-ResourceGroupName $(ResourceGroupName)'
         azurePowerShellVersion: LatestVersion
 
-  - job: deploy
+  - job: 'deploy function'
     dependsOn: infra
     pool:
       name: 'Hosted Windows 2019 with VS2019'
     variables:
-      ResourceGroupName: 'email-bugtracker'
-      DetermineTargetProjectVia: Recipient
+    - group: 'Deployment Credentials'
+    - name: ResourceGroupName
+      value: 'email-bugtracker'
+    - name: DetermineTargetProjectVia
+      value: Recipient
+    - name: AuditContainerName
       # null if you wish to disable audit logging (captures full reports into a storage account incl. sender email)
-      AuditContainerName: 'audit'
+      value : 'audit'
 
     steps:
     - task: DownloadPipelineArtifact@1
