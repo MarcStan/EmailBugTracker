@@ -18,7 +18,7 @@ schedules:
 stages:
 - stage: build
   jobs:
-  - job: 'build function'
+  - job: build
     pool:
       name: 'Hosted Windows 2019 with VS2019'
     variables:
@@ -89,7 +89,7 @@ stages:
         ScriptArguments: '-ResourceGroupName $(ResourceGroupName)'
         azurePowerShellVersion: LatestVersion
 
-  - job: 'deploy function'
+  - job: deploy
     dependsOn: infra
     pool:
       name: 'Hosted Windows 2019 with VS2019'
