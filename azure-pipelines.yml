@@ -20,7 +20,7 @@ stages:
   jobs:
   - job: build
     pool:
-      name: 'Hosted Windows 2019 with VS2019'
+      vmImage: 'windows-latest'
     variables:
       BuildConfiguration: 'release'
     steps:
