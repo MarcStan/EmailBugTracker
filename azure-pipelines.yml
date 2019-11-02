@@ -8,12 +8,6 @@ trigger:
   branches:
     include:
     - master
-schedules:
-- cron: "0 17 * * Fri"
-  displayName: Weekly build
-  branches:
-    include:
-    - master
 
 stages:
 - stage: build
