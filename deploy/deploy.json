@@ -13,7 +13,6 @@
         "tenantId": "[subscription().tenantId]"
     },
     "resources": [
-        // App insights
         {
             "type": "microsoft.insights/components",
             "kind": "other",
@@ -30,7 +29,6 @@
             "dependsOn": [
             ]
         },
-        // keyvault
         {
             "type": "Microsoft.KeyVault/vaults",
             "name": "[variables('keyVaultName')]",
@@ -55,7 +53,6 @@
                 "[resourceId('Microsoft.Web/sites', variables('functionAppName'))]"
             ]
         },
-        // function app MSI keyvault access
         {
             "apiVersion": "2018-02-14",
             "type": "Microsoft.KeyVault/vaults/accessPolicies",
@@ -79,7 +76,6 @@
                 "[resourceId('Microsoft.Web/sites', variables('functionAppName'))]"
             ]
         },
-        // Storage account
         {
             "type": "Microsoft.Storage/storageAccounts",
             "sku": {
@@ -110,7 +106,6 @@
             "dependsOn": [
             ]
         },
-        // Consumption plan for function app
         {
             "type": "Microsoft.Web/serverfarms",
             "apiVersion": "2018-02-01",
@@ -120,7 +115,6 @@
                 "name": "Y1"
             }
         },
-        // Function app
         {
             "apiVersion": "2015-08-01",
             "type": "Microsoft.Web/sites",
