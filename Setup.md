@@ -1,12 +1,10 @@
 # Initial setup
 
-Everything is fully automated via the yaml pipeline. Just plug it into your Azure DevOps and poin it to your subscription.
+Everything is fully automated via Github actions. Just [setup credentials](TODO: blog post goes here), adjust the variables at the start of the yaml file (resourcegroup, etc.) and run the action.
 
 ## 1. Deploy infrastructure
 
-First the infrastructure deployment is needed (stages 1 & 2).
-
-The provided build pipeline should set up the required infrastructure for you in its second stage. You can run it with a free [Azure DevOps](https://azure.microsoft.com/services/devops/) account.
+First the infrastructure deployment is needed.
 
 All that is needed is the resourcegroup name for the release. By convention all resources are named the same as the resourcegroup. Storage account will have any dashes removed automatically due to its name limitation.
 

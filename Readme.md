@@ -2,8 +2,6 @@
 
 > Email -> Sendgrid -> Azure function -> Azure DevOps Bug
 
-[![EmailBugTracker](https://dev.azure.com/marcstanlive/96cf8193-e838-4a8e-9973-fdd3b259a768/_apis/build/status/27)](https://dev.azure.com/marcstanlive/96cf8193-e838-4a8e-9973-fdd3b259a768/_build/definition?definitionId=27)
-
 Write an email:
 
 ![email](images/email.png)
